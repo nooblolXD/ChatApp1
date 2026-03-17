@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="topbar">Chats</div>
+
+<div id="list"></div>
+
+<script>
+const user=localStorage.getItem("user");
+if(!user) location="/";
+
+fetch("/users")
+.then(r=>r.json())
+.then(users=>{
+users.forEach(u=>{
+if(u.user!==user){
+
+const div=document.createElement("div");
+div.className="chatItem";
+
+div.innerHTML=`
+<div class="avatar">${u.user[0].toUpperCase()}</div>
+<div>${u.user}</div>
+`;
+
+div.onclick=()=>{
+localStorage.setItem("chatWith",u.user);
+location="chat.html";
+};
+
+list.appendChild(div);
+}
+});
+});
+</script>
+
+</body>
+</html>

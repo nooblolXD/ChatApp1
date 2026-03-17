@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="box">
+  <h2>Login</h2>
+
+  <input id="user" placeholder="Username">
+  <input id="pass" type="password" placeholder="Password">
+
+  <button onclick="login()">Login</button>
+
+  <a href="register.html">Create Account</a>
+</div>
+
+<script>
+function login(){
+
+const user = document.getElementById("user").value;
+const pass = document.getElementById("pass").value;
+
+if(!user || !pass){
+  alert("Enter username & password");
+  return;
+}
+
+fetch(`/login?user=${user}&pass=${pass}`)
+.then(res => res.text())
+.then(data => {
+
+  if(data === "OK"){
+    localStorage.setItem("user", user);
+    window.location = "users.html";
+  } else {
+    alert("Wrong username or password");
+  }
+
+})
+.catch(err => {
+  console.error(err);
+  alert("Server error");
+});
+
+}
+</script>
+
+</body>
+</html>

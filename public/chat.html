@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="topbar">
+  <span onclick="location='users.html'">←</span>
+  <span style="margin-left:10px;" id="title"></span>
+</div>
+
+<div id="chat"></div>
+
+<div class="inputBox">
+  <input id="msg" placeholder="Message">
+  <input type="file" id="file" hidden>
+  <button onclick="file.click()">📎</button>
+  <button onclick="send()">➤</button>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+const socket=io();
+
+const user=localStorage.getItem("user");
+const target=localStorage.getItem("chatWith");
+
+title.innerText=target;
+
+socket.emit("joinRoom",{user,target});
+
+function getTicks(s){
+if(s==="sent") return "✔";
+if(s==="delivered") return "✔✔";
+if(s==="seen") return "<span style='color:#4fc3f7'>✔✔</span>";
+return "";
+}
+
+function addMessage(d){
+
+const div=document.createElement("div");
+div.className=d.from===user?"me":"other";
+div.dataset.id=d.id;
+
+let content="";
+
+if(d.msg) content+=`<div class="bubble">${d.msg}</div>`;
+
+if(d.file){
+if(d.type==="image") content+=`<img src="/uploads/${d.file}" class="media">`;
+if(d.type==="video") content+=`<video class="media" controls src="/uploads/${d.file}"></video>`;
+}
+
+div.innerHTML=`
+${content}
+<div class="meta">${d.time} ${d.from===user?getTicks(d.status):""}</div>
+`;
+
+chat.appendChild(div);
+
+const nearBottom = chat.scrollHeight - chat.scrollTop < chat.clientHeight + 100;
+if(nearBottom) chat.scrollTop = chat.scrollHeight;
+}
+
+socket.on("loadMessages",msgs=>{
+msgs.forEach(m=>{
+addMessage(m);
+if(m.to===user && m.status!=="seen"){
+socket.emit("messageSeen",m.id);
+}
+});
+});
+
+socket.on("receiveMessage",d=>{
+addMessage(d);
+if(d.to===user){
+socket.emit("messageDelivered",d.id);
+}
+});
+
+socket.on("messageSeenUpdate",id=>{
+document.querySelectorAll(".me").forEach(m=>{
+if(m.dataset.id==id){
+m.querySelector(".meta").innerHTML+=" ✔✔";
+}
+});
+});
+
+async function send(){
+
+const msg=msgInput.value;
+const f=file.files[0];
+
+if(!msg && !f) return;
+
+let fileData=null;
+
+if(f){
+const fd=new FormData();
+fd.append("file",f);
+const r=await fetch("/upload",{method:"POST",body:fd});
+const data=await r.json();
+
+fileData={
+file:data.file,
+type:f.type.startsWith("image")?"image":"video"
+};
+}
+
+socket.emit("sendMessage",{
+from:user,
+to:target,
+msg,
+file:fileData?fileData.file:null,
+type:fileData?fileData.type:null,
+time:new Date().toLocaleTimeString()
+});
+
+msgInput.value="";
+file.value="";
+}
+
+const msgInput=document.getElementById("msg");
+const file=document.getElementById("file");
+
+msgInput.addEventListener("keypress",e=>{
+if(e.key==="Enter") send();
+});
+</script>
+
+</body>
+</html> 

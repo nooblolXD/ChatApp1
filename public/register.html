@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="box">
+  <h2>Create Account</h2>
+
+  <input id="user" placeholder="Username">
+  <input id="pass" type="password" placeholder="Password">
+
+  <button onclick="reg()">Register</button>
+
+  <a href="/">Back to Login</a>
+</div>
+
+<script>
+function reg(){
+const user=document.getElementById("user").value;
+const pass=document.getElementById("pass").value;
+
+fetch(`/register?user=${user}&pass=${pass}`)
+.then(r=>r.text())
+.then(d=>{
+  if(d==="OK"){ alert("Account created"); location="/"; }
+  else alert("Username exists");
+});
+}
+</script>
+
+</body>
+</html>
