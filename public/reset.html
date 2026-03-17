@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="box" id="loginBox">
+  <h2>Admin Access</h2>
+
+  <input id="pass" type="password" placeholder="Enter password">
+  <button onclick="check()">Enter</button>
+</div>
+
+<div id="panel" style="display:none; padding:10px;">
+  <div class="topbar">All Messages</div>
+  <div id="data"></div>
+</div>
+
+<script>
+
+function check(){
+  const pass = document.getElementById("pass").value;
+
+  fetch(`/allMessages?pass=${pass}`)
+  .then(r => {
+    if(r.status !== 200) throw "wrong";
+    return r.json();
+  })
+  .then(msgs => {
+
+    loginBox.style.display = "none";
+    panel.style.display = "block";
+
+    msgs.forEach(m => {
+
+      const div = document.createElement("div");
+      div.className = "chatItem";
+
+      let content = `
+        <b>${m.from} → ${m.to}</b><br>
+        ${m.time}<br>
+      `;
+
+      if(m.msg){
+        content += `<div>${m.msg}</div>`;
+      }
+
+      if(m.file){
+        if(m.type === "image"){
+          content += `<img src="/uploads/${m.file}" class="media">`;
+        }
+        if(m.type === "video"){
+          content += `<video controls class="media" src="/uploads/${m.file}"></video>`;
+        }
+      }
+
+      div.innerHTML = content;
+      data.appendChild(div);
+
+    });
+
+  })
+  .catch(()=>{
+    alert("Wrong password");
+  });
+}
+
+</script>
+
+</body>
+</html>
